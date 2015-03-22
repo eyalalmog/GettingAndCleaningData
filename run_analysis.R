@@ -45,28 +45,18 @@ Features<- rbind(FeaturesTrainData, FeaturesTestData)
 
 
 names(Subject)<-c("Subject")   
-names(Activity)<- c("ActivityID")  
+names(Activity)<- c("Activity")  
 FeaturesNames <- read.table(file.path(path_zip, "features.txt"),head=FALSE)
 names(Features)<- FeaturesNames[,2]  
-
-#### replacing Activity codes with descriptions
-
-activity_labels <- read.table(file.path(path_zip, "." ,"activity_labels.txt"), header= FALSE)
-names(activity_labels) <- c("ActivityID" ,"Desc")
-
-df1 <- merge(x = Activity , y = activity_labels , by = "ActivityID",  all= TRUE)
-ActivityDesc <- df1[,2]
-
-
 
 #### running cind to combine the columns
 
 
-fullDataSet <- cbind(Subject, ActivityDesc,Features)
-
-
+fullDataSet <- cbind(Subject, Activity,Features)
 
 ############### end of part 1 - we ended up with 10299 observations and 563 named columns
+
+
 
 ###### part 2 - extracts only the measurements on the mean and standard deviation for each measurement
 ### we will be looking for labels that contain the strings std and mean
@@ -76,18 +66,32 @@ subsetFeaturesNames<-FeaturesNames[,2][grep("mean\\(\\)|std\\(\\)", FeaturesName
 
 ### and now we can populate a subset of the data set
 
-subsetNames<-c( "Subject", "ActivityDesc" , as.character(subsetFeaturesNames) )
+subsetNames<-c( "Subject", "Activity" , as.character(subsetFeaturesNames) )
 subSetData<-subset(fullDataSet,select=subsetNames)
 
-###  check with head(subSetData)
+#write.table(subSetData, file="./eyal.txt", sep="\t", row.names=FALSE )
+
 
 ################   End of Part 2 #####################################################
 
-meanGrouping <- aggregate(. ~ Subject + ActivityDesc, data=subSetData, FUN = mean) 
+meanGrouping <- aggregate(. ~ Subject + Activity , data=subSetData, FUN = mean)
 
 
-write.table(meanGrouping, file="./tidyagg_out.txt", sep="\t", row.names=FALSE )
+########### Load decription for Activities
+
+activity_labels <- read.table(file.path(path_zip, "." ,"activity_labels.txt"), header= FALSE)
+names(activity_labels) <- c("Activity" ,"Desc")
+
+df1 <- merge(x = meanGrouping , y = activity_labels , by  = "Activity", all= TRUE)
+df2 <- as.character(df1[,69])
+df3 <- cbind(df1[,2],df2, df1[,3:68])
+
+
+write.table(df3, file="./eyal1.txt", sep="\t", row.names=FALSE )
                
+
+
+                   
 
 
                    
